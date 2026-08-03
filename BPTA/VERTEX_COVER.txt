@@ -1,0 +1,228 @@
+#include<iostream>
+#include<vector>
+#include<unordered_map>
+#include<unordered_set>
+#include<climits>
+using namespace std;
+
+class customHash{
+    public:
+        size_t operator()( const pair<int,int> a) const{
+            size_t first=a.first;
+            size_t second=a.second;
+            
+            return first<< (first^second);
+        }
+};
+
+class Graph{
+    
+    int n;
+    unordered_map<int,unordered_set<int>> adjlist;
+    unordered_map<pair<int,int>,bool,customHash> edges;
+    
+    public:
+        Graph(int n){
+            this->n=n;
+        }
+        
+        void insertEdge(int u,int v){
+            if(u>this->n || u<1 || v>this->n || v<1){
+                cout<<"edges must be between 1" << n<<endl;
+            }
+            adjlist[u].insert(v);
+            adjlist[v].insert(u);
+            
+            edges[{u,v}]=false;
+            
+        }
+        
+        void showAdjList(){
+             
+             for(auto it=adjlist.begin();it!=adjlist.end();it++){
+                 cout<<it->first<<"-> ";
+                 for(auto &i:it->second){
+                     cout<<i<<" ";
+                 }
+                 cout<<endl;
+             }
+        }
+        
+        vector<int> checkIsVertexCover(){
+            vector<int> vertexCover;
+            
+            int minSize=INT_MAX;
+            
+          
+            
+            auto temp=edges;
+            for(auto &j:sub){
+                
+                for(auto &ngb:adjlist[j]){
+                    
+                   auto case1=edges.find({j,ngb});
+                   auto case2=edges.find({ngb,j});
+                   
+                   
+                   if(case1 != edges.end()){
+                       edges[{j,ngb}]=true;
+                   }
+                   else{
+                       edges[{ngb,j}]=true;
+                   }
+                   
+                   
+                   
+                }
+            }
+            
+            bool valid=true;
+            for(auto it=edges.begin();it!=edges.end();it++){
+                if(!it->second){
+                    valid =false;
+                }
+            }
+            
+            edges=temp;
+            if(!valid) return;
+            
+            if(minSize>sub.size()){
+                minSize=sub.size();
+                vertexCover=sub;
+            }
+            
+            return vertexCover;
+            
+            
+            
+        }
+        void createVertexSet(int V,vector<int> &temp,int i=1){
+            if(i>V){
+                vertexSet.push_back(temp);
+                
+                return;
+            }
+            
+            
+            
+            temp.push_back(i);
+            createVertexSet(V,vertexSet,temp,i+1);
+            temp.pop_back();
+            
+            createVertexSet(V,vertexSet,temp,i+1);
+
+        }
+        
+        
+        void findVertexCover(){
+            vector<int> temp;
+            
+            vector<vector<int>> vertexSet;
+            
+            createVertexSet(this->n,vertexSet,temp);
+            
+            
+            // for(auto &i:vertexSet){
+                
+            //     for(auto &j:i){
+            //         cout<<j<<" ";
+            //     }
+            //     cout<<endl;
+            // }
+            
+            vector<int> vertexCover;
+            
+            int minSize=INT_MAX;
+            
+            for(auto &sub:vertexSet){
+                
+                auto temp=edges;
+                for(auto &j:sub){
+                    
+                    for(auto &ngb:adjlist[j]){
+                        
+                       auto case1=edges.find({j,ngb});
+                       auto case2=edges.find({ngb,j});
+                       
+                       
+                       if(case1 != edges.end()){
+                           edges[{j,ngb}]=true;
+                       }
+                       else{
+                           edges[{ngb,j}]=true;
+                       }
+                       
+                       
+                       
+                    }
+                }
+                
+                bool valid=true;
+                for(auto it=edges.begin();it!=edges.end();it++){
+                    if(!it->second){
+                        valid =false;
+                    }
+                }
+                
+                edges=temp;
+                if(!valid) continue;
+                
+                if(minSize>sub.size()){
+                    minSize=sub.size();
+                    vertexCover=sub;
+                }
+                
+                
+                
+            }
+            
+            
+            
+            cout<<"Vertex Cover is of size "<<minSize<<endl;
+            
+            
+            for(auto &j:vertexCover){
+                cout<<j<<" ";
+            }
+            
+            
+            
+            
+        }
+
+};
+int main(){
+    
+    int n;
+    
+    cout<<"enter the number of vertex: ";
+    cin>> n;
+    Graph g(n);
+   
+    
+    // char check;
+    
+    // do{
+    //     int u,v;
+    //     cout<<"starting vertex of edge: ";
+    //     cin>> u;
+    //     cout<<"ending vertex of edge: ";
+    //     cin>> v;
+        
+    //     g.insertEdge(u,v);
+    //     cout<<" \n do you want to cintiue: ";
+    //     cin>>check;
+        
+    // }while(check=='y' || check=='Y');
+    
+    
+    vector<pair<int,int>> edges={ {1,2} ,{2,3} ,{3,5},{3,8}, {2,4},{4,7},{7,8} ,{8,5},{1,6},{6,7} };
+    for(auto &[u,v]:edges){
+        g.insertEdge(u,v);
+    }
+   g.showAdjList();
+   g.findVertexCover();
+    
+    
+    return 0;
+}
