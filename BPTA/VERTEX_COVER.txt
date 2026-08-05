@@ -3,6 +3,8 @@
 #include<unordered_map>
 #include<unordered_set>
 #include<climits>
+#include<cstdlib>
+#include<random>
 using namespace std;
 
 class customHash{
@@ -15,11 +17,12 @@ class customHash{
         }
 };
 
+
 class Graph{
     
     int n;
     unordered_map<int,unordered_set<int>> adjlist;
-    unordered_map<pair<int,int>,bool,customHash> edges;
+    vector<pair<int,int>> edges;
     
     public:
         Graph(int n){
@@ -33,7 +36,8 @@ class Graph{
             adjlist[u].insert(v);
             adjlist[v].insert(u);
             
-            edges[{u,v}]=false;
+           edges.push_back({u,v});
+           edges.push_back({v,u});
             
         }
         
@@ -48,68 +52,54 @@ class Graph{
              }
         }
         
-        vector<int> checkIsVertexCover(){
-            vector<int> vertexCover;
-            
-            int minSize=INT_MAX;
-            
+       bool checkIsVertexCover(vector<int> &sub){
           
             
-            auto temp=edges;
-            for(auto &j:sub){
-                
-                for(auto &ngb:adjlist[j]){
-                    
-                   auto case1=edges.find({j,ngb});
-                   auto case2=edges.find({ngb,j});
-                   
-                   
-                   if(case1 != edges.end()){
-                       edges[{j,ngb}]=true;
-                   }
-                   else{
-                       edges[{ngb,j}]=true;
-                   }
-                   
-                   
-                   
-                }
-            }
-            
             bool valid=true;
-            for(auto it=edges.begin();it!=edges.end();it++){
-                if(!it->second){
-                    valid =false;
+            for( auto [u,v]:this->edges){
+                
+                bool found=false;
+                for(int i=0;i<sub.size();i++){
+                    if(sub[i]==u || sub[i]==v){
+                        found=true;
+                    }
                 }
+                
+                if(!found){
+                    valid=false;
+                }
+                
+                
             }
             
-            edges=temp;
-            if(!valid) return;
             
-            if(minSize>sub.size()){
-                minSize=sub.size();
-                vertexCover=sub;
-            }
-            
-            return vertexCover;
+            return valid;
+          
             
             
             
         }
-        void createVertexSet(int V,vector<int> &temp,int i=1){
+        void createVertexSet(int V,vector<int> &temp,vector<int> &ans,int i=1){
             if(i>V){
-                vertexSet.push_back(temp);
                 
+                auto validVertex=checkIsVertexCover(temp);
+                
+                if(validVertex){
+                    
+                    if( ans.size()==0 || temp.size()<=ans.size()){
+                        ans=temp;
+                    }
+                }
                 return;
             }
             
             
             
             temp.push_back(i);
-            createVertexSet(V,vertexSet,temp,i+1);
+            createVertexSet(V,temp,ans,i+1);
             temp.pop_back();
             
-            createVertexSet(V,vertexSet,temp,i+1);
+            createVertexSet(V,temp,ans,i+1);
 
         }
         
@@ -117,68 +107,14 @@ class Graph{
         void findVertexCover(){
             vector<int> temp;
             
-            vector<vector<int>> vertexSet;
-            
-            createVertexSet(this->n,vertexSet,temp);
-            
-            
-            // for(auto &i:vertexSet){
-                
-            //     for(auto &j:i){
-            //         cout<<j<<" ";
-            //     }
-            //     cout<<endl;
-            // }
-            
             vector<int> vertexCover;
             
-            int minSize=INT_MAX;
-            
-            for(auto &sub:vertexSet){
-                
-                auto temp=edges;
-                for(auto &j:sub){
-                    
-                    for(auto &ngb:adjlist[j]){
-                        
-                       auto case1=edges.find({j,ngb});
-                       auto case2=edges.find({ngb,j});
-                       
-                       
-                       if(case1 != edges.end()){
-                           edges[{j,ngb}]=true;
-                       }
-                       else{
-                           edges[{ngb,j}]=true;
-                       }
-                       
-                       
-                       
-                    }
-                }
-                
-                bool valid=true;
-                for(auto it=edges.begin();it!=edges.end();it++){
-                    if(!it->second){
-                        valid =false;
-                    }
-                }
-                
-                edges=temp;
-                if(!valid) continue;
-                
-                if(minSize>sub.size()){
-                    minSize=sub.size();
-                    vertexCover=sub;
-                }
-                
-                
-                
-            }
+            createVertexSet(this->n,temp,vertexCover);
             
             
             
-            cout<<"Vertex Cover is of size "<<minSize<<endl;
+            
+            cout<<"Vertex Cover is of size "<<vertexCover.size()<<endl;
             
             
             for(auto &j:vertexCover){
@@ -193,36 +129,39 @@ class Graph{
 };
 int main(){
     
-    int n;
-    
-    cout<<"enter the number of vertex: ";
-    cin>> n;
+    int n=10;
     Graph g(n);
    
+    srand(time(0));
     
-    // char check;
-    
-    // do{
-    //     int u,v;
-    //     cout<<"starting vertex of edge: ";
-    //     cin>> u;
-    //     cout<<"ending vertex of edge: ";
-    //     cin>> v;
-        
+    unordered_map<pair<int,int>,bool,customHash> isValidEdge;
+    // vector<pair<int,int>> edges={ {1,2},{1,4} ,{2,3} ,{3,5},{3,8}, {2,4},{4,7},{7,8} ,{8,5},{1,6},{6,7} };
+    // for(auto &[u,v]:edges){
     //     g.insertEdge(u,v);
-    //     cout<<" \n do you want to cintiue: ";
-    //     cin>>check;
+    // }
+    // g.showAdjList();
+    // g.findVertexCover();
+    int m=rand()%(36)+10;
+    
+    for(int i=0;i<m;i++){
+        int u=(rand() %9)+1;
+        int v= (rand()%9)+1;
         
-    // }while(check=='y' || check=='Y');
-    
-    
-    vector<pair<int,int>> edges={ {1,2} ,{2,3} ,{3,5},{3,8}, {2,4},{4,7},{7,8} ,{8,5},{1,6},{6,7} };
-    for(auto &[u,v]:edges){
+        if((isValidEdge.size()/2)==m) break;
+        
+        
+        if(isValidEdge[{u,v}] || isValidEdge[{v,u}]){
+            continue;
+        }
         g.insertEdge(u,v);
+        isValidEdge[{u,v}]=true;
+        isValidEdge[{v,u}]=true;
+        
     }
-   g.showAdjList();
-   g.findVertexCover();
     
-    
+    g.showAdjList();
+    g.findVertexCover();
     return 0;
 }
+
+
