@@ -5,15 +5,16 @@
 #include<climits>
 #include<cstdlib>
 #include<random>
+#include<fstream>
 using namespace std;
 
 class customHash{
     public:
-        size_t operator()( const pair<int,int> a) const{
+        size_t operator()(const pair<int,int> a) const{
             size_t first=a.first;
             size_t second=a.second;
             
-            return first<< (first^second);
+            return first <<(first^second);
         }
 };
 
@@ -86,7 +87,7 @@ class Graph{
                 
                 if(validVertex){
                     
-                    if( ans.size()==0 || temp.size()<=ans.size()){
+                    if( ans.size()==0 || temp.size()<ans.size()){
                         ans=temp;
                     }
                 }
@@ -102,24 +103,48 @@ class Graph{
             createVertexSet(V,temp,ans,i+1);
 
         }
-        
+        void dfs(int src, vector<bool> &visited){
+            
+            visited[src]=true;
+            
+            for(auto &j:adjlist[src]){
+                dfs(j,visited);
+            }
+        }
+        bool isConnected(){
+            vector<bool> visited(n+1,false);
+            int count=0;
+            for(int i=1;i<=n;i++){
+                if(!visited[i]){
+                    count++;
+                    
+                    dfs(i,visited);
+                }
+            }
+            
+            
+            return count>1;
+        }
         
         void findVertexCover(){
+            fstream fileTwo("output.txt",std::ios::app);
             vector<int> temp;
             
             vector<int> vertexCover;
             
             createVertexSet(this->n,temp,vertexCover);
-            
-            
-            
-            
-            cout<<"Vertex Cover is of size "<<vertexCover.size()<<endl;
-            
-            
-            for(auto &j:vertexCover){
-                cout<<j<<" ";
+
+            fileTwo<<"[";
+            for(int i=0;i<vertexCover.size();i++){
+                fileTwo<<vertexCover[i];
+                if(i!=vertexCover.size()-1){
+                    fileTwo<<",";
+                }
             }
+            
+            fileTwo<<"]"<<endl;
+            
+            fileTwo<<"Vertex Cover is of size "<<vertexCover.size()<<endl<<endl;
         
         }
 
@@ -127,43 +152,64 @@ class Graph{
 int main(){
     
     int n=10;
-    Graph g(n);
+    
+    fstream fileOne("input.txt",std::ios::app);
+    Graph *g=NULL;
    
     srand(time(0));
+    vector<int> noOfEdges={10,15,20,25,30,35,40,45};
+    int E=noOfEdges[rand()%(noOfEdges.size())];
+    cout<<"total edges "<< E<<endl;
     
-    unordered_map<pair<int,int>,bool,customHash> isValidEdge;
-    // vector<pair<int,int>> edges={ {1,2},{1,4} ,{2,3} ,{3,5},{3,8}, {2,4},{4,7},{7,8} ,{8,5},{1,6},{6,7} };
-    // for(auto &[u,v]:edges){
-    //     g.insertEdge(u,v);
-    // }
-    // g.showAdjList();
-    // g.findVertexCover();
-    int m=rand()%(36)+10;
-    int count=0;
-    cout<<"total edges "<< m<<endl;
-    for(int i=0;;i++){
-        int u=(rand() %9)+1;
-        int v= (rand()%9)+1;
-        
-        if(count==m) break;
-        
-        
-        if(isValidEdge[{u,v}] || isValidEdge[{v,u}]){
-            continue;
+    while(true){
+        cout<<"started"<<endl;
+        unordered_map<pair<int,int>,bool,customHash> isValidEdge;
+        vector<pair<int,int>> edges;
+        g=new Graph(n);
+        int count=0;
+    
+        for(int i=0;;i++){
+            int u=(rand() %10)+1;
+            int v= (rand()%10)+1;
+            
+            if(count==E) break;
+            if(isValidEdge[{u,v}] || isValidEdge[{v,u}]){
+                continue;
+            }
+            edges.push_back({u,v});
+            g->insertEdge(u,v);
+            count++;
+            isValidEdge[{u,v}]=true;
+            isValidEdge[{v,u}]=true;
+   
         }
-        g.insertEdge(u,v);
-        count++;
-        isValidEdge[{u,v}]=true;
-        isValidEdge[{v,u}]=true;
         
+        bool isConnect=g->isConnected();
+        
+        if(!isConnect) {
+            delete g;
+            g=NULL;
+            continue;
+            
+        }
+        //  fileOne<<"Edges=[";
+        //  fileOne<< "{" << u<< ","<<v<<"}";
+        //  if(count!=E) fileOne<<" , ";
+        // fileOne<<"]"<<endl<<endl;
+        
+        cout<<"completed"<<endl;
+        
+        
+        
+        break;
     }
     
+    
+    g->showAdjList();
+    g->findVertexCover();
   
-    g.showAdjList();
-    g.findVertexCover();
     
     
     return 0;
 }
-
 
