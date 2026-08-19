@@ -1,241 +1,244 @@
-#include <iostream>
-#include <vector>
-#include <unordered_map>
-#include <unordered_set>
-#include <cstdlib>
-#include <ctime>
-#include <fstream>
-#include <utility>
+#include<iostream>
+#include<vector>
+#include<unordered_map>
+#include<unordered_set>
+#include<climits>
+#include<cstdlib>
+#include<random>
+#include<fstream>
+#include<ctime>
 
 using namespace std;
 
-class CustomHash {
-public:
-    size_t operator()(const pair<int, int>& p) const {
-        return static_cast<size_t>(p.first) ^
-               (static_cast<size_t>(p.second) << 1);
-    }
+class customHash{
+    public:
+        size_t operator()(const pair<int,int> a) const{
+            size_t first=a.first;
+            size_t second=a.second;
+
+            return first << (first^second);
+        }
 };
 
-class Graph {
+
+class Graph{
 
     int n;
-    unordered_map<int, unordered_set<int>> adjlist;
-    vector<pair<int, int>> edges;
+    unordered_map<int,unordered_set<int>> adjlist;
+    vector<pair<int,int>> edges;
 
-public:
-
-    Graph(int n) {
-        this->n = n;
-    }
-
-    void insertEdge(int u, int v) {
-
-        if (u < 1 || u > n || v < 1 || v > n) {
-            cout << "Edges must be between 1 and " << n << endl;
-            return;
+    public:
+        Graph(int n){
+            this->n=n;
         }
 
-        if (u == v) {
-            return;
-        }
-
-        // Avoid duplicate edges
-        if (adjlist[u].count(v)) {
-            return;
-        }
-
-        adjlist[u].insert(v);
-        adjlist[v].insert(u);
-
-        // Store an undirected edge only once
-        edges.push_back({u, v});
-    }
-
-    void showAdjList() {
-
-        for (auto& [vertex, neighbours] : adjlist) {
-
-            cout << vertex << " -> ";
-
-            for (int neighbour : neighbours) {
-                cout << neighbour << " ";
+        void insertEdge(int u,int v){
+            if(u>this->n || u<1 || v>this->n || v<1){
+                cout<<"edges must be between 1 and "<<n<<endl;
+                return;
             }
 
-            cout << endl;
-        }
-    }
+            adjlist[u].insert(v);
+            adjlist[v].insert(u);
 
-    bool checkIsVertexCover(const vector<int>& sub) {
-
-        vector<bool> selected(n + 1, false);
-
-        for (int vertex : sub) {
-            selected[vertex] = true;
+            edges.push_back({u,v});
+            edges.push_back({v,u});
         }
 
-        for (auto [u, v] : edges) {
+        void showAdjList(){
 
-            // Neither endpoint is selected
-            if (!selected[u] && !selected[v]) {
-                return false;
-            }
+             for(auto it=adjlist.begin();it!=adjlist.end();it++){
+                 cout<<it->first<<"-> ";
+
+                 for(auto &i:it->second){
+                     cout<<i<<" ";
+                 }
+
+                 cout<<endl;
+             }
         }
 
-        return true;
-    }
+       bool checkIsVertexCover(vector<int> &sub){
 
-    void createVertexSet(
-        int V,
-        vector<int>& temp,
-        vector<int>& ans,
-        int i = 1
-    ) {
+            bool valid=true;
 
-        // All vertices have been considered
-        if (i > V) {
+            for(auto [u,v]:this->edges){
 
-            if (checkIsVertexCover(temp)) {
+                bool found=false;
 
-                if (ans.empty() || temp.size() < ans.size()) {
-                    ans = temp;
+                for(int i=0;i<sub.size();i++){
+                    if(sub[i]==u || sub[i]==v){
+                        found=true;
+                    }
+                }
+
+                if(!found){
+                    valid=false;
                 }
             }
 
-            return;
+            return valid;
         }
 
-        // Include vertex i
-        temp.push_back(i);
+        void createVertexSet(
+            int V,
+            vector<int> &temp,
+            vector<int> &ans,
+            int i=1
+        ){
 
-        createVertexSet(V, temp, ans, i + 1);
+            if(i>V){
 
-        temp.pop_back();
+                auto validVertex=checkIsVertexCover(temp);
 
-        // Don't include vertex i
-        createVertexSet(V, temp, ans, i + 1);
-    }
+                if(validVertex){
 
-    void dfs(int src, vector<bool>& visited) {
+                    if(ans.size()==0 || temp.size()<ans.size()){
+                        ans=temp;
+                    }
+                }
 
-        visited[src] = true;
-
-        for (int neighbour : adjlist[src]) {
-
-            if (!visited[neighbour]) {
-                dfs(neighbour, visited);
+                return;
             }
-        }
-    }
 
-    bool isConnected() {
+            temp.push_back(i);
 
-        vector<bool> visited(n + 1, false);
+            createVertexSet(V,temp,ans,i+1);
 
-        int components = 0;
+            temp.pop_back();
 
-        for (int i = 1; i <= n; i++) {
-
-            if (!visited[i]) {
-
-                components++;
-
-                dfs(i, visited);
-            }
+            createVertexSet(V,temp,ans,i+1);
         }
 
-        return components == 1;
-    }
+        void dfs(int src, vector<bool> &visited){
 
-    void findVertexCover() {
+            visited[src]=true;
 
-        ofstream file("output.txt", ios::app);
+            for(auto &j:adjlist[src]){
 
-        vector<int> temp;
-        vector<int> vertexCover;
-
-        createVertexSet(n, temp, vertexCover);
-
-        file << "[";
-
-        for (size_t i = 0; i < vertexCover.size(); i++) {
-
-            file << vertexCover[i];
-
-            if (i != vertexCover.size() - 1) {
-                file << ",";
+                if(!visited[j]){
+                    dfs(j,visited);
+                }
             }
         }
 
-        file << "]\n";
+        bool isConnected(){
 
-        file << "Vertex Cover is of size "
-             << vertexCover.size()
-             << "\n\n";
-    }
+            vector<bool> visited(n+1,false);
+
+            int count=0;
+
+            for(int i=1;i<=n;i++){
+
+                if(!visited[i]){
+
+                    count++;
+
+                    dfs(i,visited);
+                }
+            }
+
+            return count==1;
+        }
+
+        void findVertexCover(){
+
+            fstream fileTwo("output.txt",std::ios::app);
+
+            vector<int> temp;
+
+            vector<int> vertexCover;
+
+            createVertexSet(this->n,temp,vertexCover);
+
+            fileTwo<<"[";
+
+            for(int i=0;i<vertexCover.size();i++){
+
+                fileTwo<<vertexCover[i];
+
+                if(i!=vertexCover.size()-1){
+                    fileTwo<<",";
+                }
+            }
+
+            fileTwo<<"]"<<endl;
+
+            fileTwo<<"Vertex Cover is of size "
+                   <<vertexCover.size()<<endl<<endl;
+        }
+
 };
 
 
-int main() {
+int main(){
 
-    int n = 10;
+    int n=10;
 
-    Graph* g = nullptr;
+    fstream fileOne("input.txt",std::ios::app);
 
-    srand(static_cast<unsigned>(time(nullptr)));
+    Graph *g=NULL;
 
-    vector<int> possibleEdges = {
-        10, 15, 20, 25, 30, 35, 40, 45
+    srand(time(0));
+
+    vector<int> noOfEdges={
+        10,15,20,25,30,35,40,45
     };
 
-    int E = possibleEdges[rand() % possibleEdges.size()];
+    int E=noOfEdges[rand()%(noOfEdges.size())];
 
-    cout << "Total edges: " << E << endl;
+    cout<<"total edges "<<E<<endl;
 
-    while (true) {
+    while(true){
 
-        cout << "Started" << endl;
+        cout<<"started"<<endl;
 
-        unordered_map<pair<int, int>, bool, CustomHash> isValidEdge;
+        unordered_map<pair<int,int>,bool,customHash> isValidEdge;
 
-        g = new Graph(n);
+        vector<pair<int,int>> edges;
 
-        int count = 0;
+        g=new Graph(n);
 
-        while (count < E) {
+        int count=0;
 
-            int u = (rand() % n) + 1;
-            int v = (rand() % n) + 1;
+        for(int i=0;;i++){
 
-            // No self-loop
-            if (u == v) {
+            int u=(rand()%10)+1;
+            int v=(rand()%10)+1;
+
+            if(u==v)
+                continue;
+
+            if(count==E)
+                break;
+
+            if(isValidEdge[{u,v}] ||
+               isValidEdge[{v,u}]){
+
                 continue;
             }
 
-            // No duplicate edge
-            if (isValidEdge[{u, v}] ||
-                isValidEdge[{v, u}]) {
-                continue;
-            }
+            edges.push_back({u,v});
 
-            g->insertEdge(u, v);
-
-            isValidEdge[{u, v}] = true;
-            isValidEdge[{v, u}] = true;
+            g->insertEdge(u,v);
 
             count++;
+
+            isValidEdge[{u,v}]=true;
+            isValidEdge[{v,u}]=true;
         }
 
-        // Keep only connected graphs
-        if (!g->isConnected()) {
+        bool isConnect=g->isConnected();
+
+        if(!isConnect){
 
             delete g;
-            g = nullptr;
+            g=NULL;
 
             continue;
         }
 
-        cout << "Completed" << endl;
+        cout<<"completed"<<endl;
 
         break;
     }
@@ -245,7 +248,7 @@ int main() {
     g->findVertexCover();
 
     delete g;
-    g = nullptr;
+    g=NULL;
 
     return 0;
 }
