@@ -26,10 +26,12 @@ class Graph{
     int n;
     unordered_map<int,unordered_set<int>> adjlist;
     vector<pair<int,int>> edges;
+    int fileCounter;
 
     public:
-        Graph(int n){
+        Graph(int n,int i){
             this->n=n;
+            this->fileCounter=i;
         }
 
         void insertEdge(int u,int v){
@@ -82,12 +84,7 @@ class Graph{
             return valid;
         }
 
-        void createVertexSet(
-            int V,
-            vector<int> &temp,
-            vector<int> &ans,
-            int i=1
-        ){
+        void createVertexSet(int V,vector<int> &temp,vector<int> &ans,int i=1){
 
             if(i>V){
 
@@ -145,7 +142,8 @@ class Graph{
 
         vector<int> findVertexCover(){
 
-            fstream fileTwo("output.txt");
+            string str="output" + to_string(fileCounter+1) + ".txt";
+            ofstream fileTwo("./data/" + str);
 
             vector<int> temp;
 
@@ -195,94 +193,97 @@ int main(){
 
     int n=10;
 
-    fstream fileOne("input.txt");
+    
 
     Graph *g=NULL;
 
     srand(time(0));
 
-    vector<int> noOfEdges={
-        10,15,20,25,30,35,40,45
-    };
+    vector<int> noOfEdges={10,15,20,25,30,35,40,45};
+    for(int counter=0;counter<noOfEdges.size();counter++){
+            string str= "input" + to_string(counter+1) +".txt";
 
-    int E=noOfEdges[rand()%(noOfEdges.size())];
+            ofstream fileOne("./data/" +str);
 
-    fileOne << "10" <<" " << E;
-    cout<<"total edges "<<E<<endl;
-    vector<pair<int,int>> edges;
-    while(true){
+            int E=noOfEdges[counter];
 
-        cout<<"started"<<endl;
+            fileOne << "10" <<" " << E;
+        
+            vector<pair<int,int>> edges; // for entry of input file
+            while(true){
 
-        unordered_map<pair<int,int>,bool,customHash> isValidEdge;
+                unordered_map<pair<int,int>,bool,customHash> isValidEdge;
 
-        edges=vector<pair<int,int>>();
+                edges=vector<pair<int,int>>();
 
-        g=new Graph(n);
+                g=new Graph(n,counter);
 
-        int count=0;
+                int count=0;
 
-        for(int i=0;;i++){
+                for(int i=0;;i++){
 
-            int u=(rand()%10)+1;
-            int v=(rand()%10)+1;
+                    int u=(rand()%10)+1;
+                    int v=(rand()%10)+1;
 
-            if(u==v)
-                continue;
+                    if(u==v)
+                        continue;
 
-            if(count==E)
+                    if(count==E)
+                        break;
+
+                    if(isValidEdge[{u,v}] ||
+                    isValidEdge[{v,u}]){
+
+                        continue;
+                    }
+
+                    edges.push_back({u,v});
+
+                    g->insertEdge(u,v);
+
+                    count++;
+
+                    isValidEdge[{u,v}]=true;
+                    isValidEdge[{v,u}]=true;
+                }
+
+                bool isConnect=g->isConnected();
+
+                if(!isConnect){
+
+                    delete g;
+                    g=NULL;
+
+                    continue;
+                }
+
+            
+
                 break;
-
-            if(isValidEdge[{u,v}] ||
-               isValidEdge[{v,u}]){
-
-                continue;
             }
+            
+            fileOne << "\n[ ";
+                
+                for(int i=0;i<edges.size();i++){
+                    
+                    fileOne<<"["<<edges[i].first<<","<<edges[i].second<<"]";
+                    
+                    if(i!=edges.size()-1){
+                        fileOne<<" , ";
+                    }
+                }
+                
+            fileOne<<" ]"<<endl<<endl;
+                
+            g->showAdjList();
 
-            edges.push_back({u,v});
-
-            g->insertEdge(u,v);
-
-            count++;
-
-            isValidEdge[{u,v}]=true;
-            isValidEdge[{v,u}]=true;
-        }
-
-        bool isConnect=g->isConnected();
-
-        if(!isConnect){
+            g->findVertexCover();
 
             delete g;
             g=NULL;
-
-            continue;
-        }
-
-       
-
-        break;
     }
-    
-     fileOne << "\n[ ";
-        
-        for(int i=0;i<edges.size();i++){
-            
-            fileOne<<"["<<edges[i].first<<","<<edges[i].second<<"]";
-            
-            if(i!=edges.size()-1){
-                fileOne<<" , ";
-            }
-        }
-        
-    fileOne<<" ]"<<endl<<endl;
-        
-    g->showAdjList();
 
-    g->findVertexCover();
-
-    delete g;
-    g=NULL;
+  
 
     return 0;
 }
