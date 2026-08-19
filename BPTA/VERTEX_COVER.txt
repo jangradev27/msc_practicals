@@ -62,8 +62,10 @@ class Graph{
 
             bool valid=true;
 
-            for(auto [u,v]:this->edges){
-
+            for(auto p:this->edges){
+                
+                int u=p.first;
+                int v=p.second;
                 bool found=false;
 
                 for(int i=0;i<sub.size();i++){
@@ -141,9 +143,9 @@ class Graph{
             return count==1;
         }
 
-        void findVertexCover(){
+        vector<int> findVertexCover(){
 
-            fstream fileTwo("output.txt",std::ios::app);
+            fstream fileTwo("output.txt");
 
             vector<int> temp;
 
@@ -164,9 +166,27 @@ class Graph{
 
             fileTwo<<"]"<<endl;
 
-            fileTwo<<"Vertex Cover is of size "
-                   <<vertexCover.size()<<endl<<endl;
+            fileTwo<<vertexCover.size()<<endl<<endl;
+                   
+            
+            return vertexCover;  
         }
+        
+        // void visualizerGraph(){
+            
+        //    ofstream file("data.json");
+        //    file << "{\n";
+
+        //    file<<"\"edges\" :[ ";
+
+        //     for(int i=0;i<edges.size();i++){
+        //         file << "[" <<edges[i].first << "," << edges[i].second<<"]";
+
+        //         if(i!=edges.size()-1)
+        //     }
+            
+            
+        // }
 
 };
 
@@ -175,7 +195,7 @@ int main(){
 
     int n=10;
 
-    fstream fileOne("input.txt",std::ios::app);
+    fstream fileOne("input.txt");
 
     Graph *g=NULL;
 
@@ -187,15 +207,16 @@ int main(){
 
     int E=noOfEdges[rand()%(noOfEdges.size())];
 
+    fileOne << "10" <<" " << E;
     cout<<"total edges "<<E<<endl;
-
+    vector<pair<int,int>> edges;
     while(true){
 
         cout<<"started"<<endl;
 
         unordered_map<pair<int,int>,bool,customHash> isValidEdge;
 
-        vector<pair<int,int>> edges;
+        edges=vector<pair<int,int>>();
 
         g=new Graph(n);
 
@@ -238,11 +259,24 @@ int main(){
             continue;
         }
 
-        cout<<"completed"<<endl;
+       
 
         break;
     }
-
+    
+     fileOne << "\n[ ";
+        
+        for(int i=0;i<edges.size();i++){
+            
+            fileOne<<"["<<edges[i].first<<","<<edges[i].second<<"]";
+            
+            if(i!=edges.size()-1){
+                fileOne<<" , ";
+            }
+        }
+        
+    fileOne<<" ]"<<endl<<endl;
+        
     g->showAdjList();
 
     g->findVertexCover();
