@@ -33,6 +33,7 @@ class Graph{
         void insertEdge(int u,int v){
             if(u>this->n || u<1 || v>this->n || v<1){
                 cout<<"edges must be between 1" << n<<endl;
+                return;
             }
             adjlist[u].insert(v);
             adjlist[v].insert(u);
@@ -123,7 +124,7 @@ class Graph{
             }
             
             
-            return count>1;
+            return count==1;
         }
         
         void findVertexCover(){
@@ -171,7 +172,7 @@ int main(){
         for(int i=0;;i++){
             int u=(rand() %10)+1;
             int v= (rand()%10)+1;
-            
+            if(u==v) continue;
             if(count==E) break;
             if(isValidEdge[{u,v}] || isValidEdge[{v,u}]){
                 continue;
@@ -212,4 +213,3 @@ int main(){
     
     return 0;
 }
-
