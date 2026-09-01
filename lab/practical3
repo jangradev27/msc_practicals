@@ -1,0 +1,112 @@
+import matplotlib.pyplot as plt 
+
+import networkx as nx
+
+def getTopFiveElements(degreeCentrality):
+    visited= set()
+    topFive=[]
+    for i in range(5):
+        maxDegree=-1
+        maxNode=-1
+        for i in degreeCentrality:
+            if i not in visited:
+                if degreeCentrality[i]>maxDegree:
+                    maxDegree=degreeCentrality[i]
+                    maxNode=i
+        visited.add(maxNode)
+        topFive.append((maxNode,maxDegree))
+    return topFive
+
+def bfs(graph,src):
+    visited=set()
+    queue=[]
+    edges=[]
+    nodes=[]
+    queue.append(src)
+    visited.add(src)
+    while queue:
+        node=queue.pop(0)
+        nodes.append(node)
+        for i in graph.neighbors(node):
+            if i not in visited:
+                visited.add(i)
+                queue.append(i)
+                edges.append((node,i))
+    return nodes,edges
+    
+def createAdjList(graph,isDolphins=False):
+    src=isDolphins and 'Zig' or 0
+    nodes,edges= bfs(graph,src)
+    adjlist={}
+    degree={}
+    for i in nodes:
+        adjlist[i]=[]
+        degree[i]=0
+    for i in edges:
+        u=i[0]
+        v=i[1]
+        adjlist[u].append(v)
+        adjlist[v].append(u)
+        degree[u]+=1
+        degree[v]+=1
+    return nodes,edges,adjlist,degree
+
+def degree_centrality(graph,degree):
+    nodes=graph.nodes()
+    degree_centrality={}
+    for i in nodes:
+        degree_centrality[i]=degree[i]/(len(nodes)-1)
+    return degree_centrality
+
+
+def compare(degreeCentrality,graph):
+    verified_degree_centrality=nx.degree_centrality(graph)
+    for i in graph.nodes():
+        print(f"calculated DC of Node {i}: {degreeCentrality[i]} and Verified DC: {verified_degree_centrality[i]}")
+
+def getColors(graph,topFive):
+    colors=[]
+    for i in graph.nodes():
+        if i in [x[0] for x in topFive]:
+            colors.append('red')
+        else:
+            colors.append('blue')
+    return colors
+graph1 = nx.karate_club_graph()
+graph2= nx.read_gml("dolphins.gml")
+
+
+
+graph1_nodes,graph1_edges,graph1_adjlist, graph1_degree = createAdjList(graph1)
+graph2_nodes,graph2_edges,graph2_adjlist, graph2_degree = createAdjList(graph2,isDolphins=True)
+
+
+graph1_degree_centrality = degree_centrality(graph1, graph1_degree)
+graph2_degree_centrality = degree_centrality(graph2, graph2_degree)
+
+for i in graph1_nodes:
+    print(f"Degree of Node {i} is {graph1_degree[i]} and Degree Centrality is {graph1_degree_centrality[i]}")
+
+for i in graph2_nodes:
+    print(f"Degree of Node {i} is {graph2_degree[i]} and Degree Centrality is {graph2_degree_centrality[i]}")
+
+compare(graph1_degree_centrality, graph1)
+compare(graph2_degree_centrality, graph2)
+
+graph1_topFive = getTopFiveElements(graph1_degree_centrality)
+graph2_topFive = getTopFiveElements(graph2_degree_centrality)
+
+graph1_color = getColors(graph1, graph1_topFive)
+graph2_color = getColors(graph2, graph2_topFive)
+
+plt.figure(figsize=(14, 6))
+
+plt.subplot(121)
+nx.draw(graph1, with_labels=True, node_color=graph1_color)
+plt.title("Karate Club Graph")
+
+plt.subplot(122)
+nx.draw(graph2, with_labels=True, node_color=graph2_color)
+plt.title("Dolphins Graph")
+
+plt.show()
